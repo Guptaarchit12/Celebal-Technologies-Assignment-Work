@@ -1,0 +1,4 @@
+SELECT 
+FORMAT(GETDATE(), 'MMMM dd yyyy, dddd') AS 'Full Date',
+FORMAT(GETDATE(), 'hh:mm:ss tt') AS '12 Hour Time',
+FORMAT(GETDATE(), 'HH:mm:ss') AS '24 Hour Time';
