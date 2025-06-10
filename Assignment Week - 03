@@ -1,0 +1,315 @@
+TASK - 01
+
+WITH ProjectGroups AS (
+  SELECT *,
+         DATE_SUB(Start_Date, INTERVAL ROW_NUMBER() OVER (ORDER BY Start_Date) DAY) AS grp
+  FROM Projects
+),
+GroupedProjects AS (
+  SELECT MIN(Start_Date) AS Start_Date,
+         MAX(End_Date) AS End_Date,
+         DATEDIFF(MAX(End_Date), MIN(Start_Date)) + 1 AS Duration
+  FROM ProjectGroups
+  GROUP BY grp
+)
+SELECT Start_Date, End_Date
+FROM GroupedProjects
+ORDER BY Duration ASC, Start_Date;
+
+ TASK - 02
+
+SELECT s.Name
+FROM Students s
+JOIN Friends f ON s.ID = f.ID
+JOIN Packages sp ON s.ID = sp.ID
+JOIN Packages fp ON f.Friend_ID = fp.ID
+WHERE fp.Salary > sp.Salary
+ORDER BY fp.Salary;
+
+TASK - 03
+
+SELECT f1.X, f1.Y
+FROM Functions f1
+JOIN Functions f2
+  ON f1.X = f2.Y AND f1.Y = f2.X
+WHERE f1.X <= f1.Y
+GROUP BY f1.X, f1.Y
+ORDER BY f1.X;
+
+TASK - 04
+
+SELECT c.contest_id, c.hacker_id, c.name,
+       SUM(total_submissions) AS total_submissions,
+       SUM(total_accepted_submissions) AS total_accepted_submissions,
+       SUM(total_views) AS total_views,
+       SUM(total_unique_views) AS total_unique_views
+FROM Contests c
+JOIN Colleges col ON c.contest_id = col.contest_id
+JOIN Challenges ch ON col.college_id = ch.college_id
+JOIN View_Stats v ON ch.challenge_id = v.challenge_id
+JOIN Submission_Stats s ON ch.challenge_id = s.challenge_id
+GROUP BY c.contest_id, c.hacker_id, c.name
+HAVING SUM(total_submissions) > 0
+   OR SUM(total_accepted_submissions) > 0
+   OR SUM(total_views) > 0
+   OR SUM(total_unique_views) > 0
+ORDER BY c.contest_id;
+
+SELECT c.contest_id,
+       c.hacker_id,
+       c.name,
+       SUM(ss.total_submissions) AS total_submissions,
+       SUM(ss.total_accepted_submissions) AS total_accepted_submissions,
+       SUM(vs.total_views) AS total_views,
+       SUM(vs.total_unique_views) AS total_unique_views
+FROM Contests c
+JOIN Colleges col ON c.contest_id = col.contest_id
+JOIN Challenges ch ON col.college_id = ch.college_id
+LEFT JOIN View_Stats vs ON ch.challenge_id = vs.challenge_id
+LEFT JOIN Submission_Stats ss ON ch.challenge_id = ss.challenge_id
+GROUP BY c.contest_id, c.hacker_id, c.name
+HAVING SUM(ss.total_submissions) +
+       SUM(ss.total_accepted_submissions) +
+       SUM(vs.total_views) +
+       SUM(vs.total_unique_views) > 0
+ORDER BY c.contest_id;
+
+TASK - 05
+
+WITH daily_counts AS (
+  SELECT submission_date,
+         hacker_id,
+         COUNT(*) AS submission_count
+  FROM Submissions
+  GROUP BY submission_date, hacker_id
+),
+ranked_hackers AS (
+  SELECT dc.submission_date,
+         dc.hacker_id,
+         h.name,
+         dc.submission_count,
+         RANK() OVER (
+           PARTITION BY dc.submission_date
+           ORDER BY dc.submission_count DESC, dc.hacker_id ASC
+         ) AS rnk
+  FROM daily_counts dc
+  JOIN Hackers h ON dc.hacker_id = h.hacker_id
+),
+unique_hacker_count AS (
+  SELECT submission_date,
+         COUNT(DISTINCT hacker_id) AS total_hackers
+  FROM Submissions
+  GROUP BY submission_date
+)
+SELECT u.submission_date,
+       u.total_hackers,
+       r.hacker_id,
+       r.name
+FROM unique_hacker_count u
+JOIN ranked_hackers r
+  ON u.submission_date = r.submission_date
+WHERE r.rnk = 1
+ORDER BY u.submission_date;
+
+TASK - 06
+
+SELECT ROUND(
+    ABS(MIN(LAT_N) - MAX(LAT_N)) + ABS(MIN(LONG_W) - MAX(LONG_W)), 
+    4
+) AS manhattan_distance
+FROM STATION;
+
+TASK - 07
+
+
+WITH RECURSIVE numbers AS (
+    SELECT 2 as n
+    UNION ALL
+    SELECT n + 1 FROM numbers WHERE n < 1000
+),
+primes AS (
+    SELECT n FROM numbers n1
+    WHERE NOT EXISTS (
+        SELECT 1 FROM numbers n2 
+        WHERE n2.n < n1.n AND n2.n > 1 AND n1.n % n2.n = 0
+    )
+)
+SELECT STRING_AGG(n::text, '&') FROM primes;
+
+TASK - 08
+
+SELECT 
+    MAX(CASE WHEN Occupation = 'Doctor' THEN Name END) AS Doctor,
+    MAX(CASE WHEN Occupation = 'Professor' THEN Name END) AS Professor,
+    MAX(CASE WHEN Occupation = 'Singer' THEN Name END) AS Singer,
+    MAX(CASE WHEN Occupation = 'Actor' THEN Name END) AS Actor
+FROM (
+    SELECT Name, Occupation,
+           ROW_NUMBER() OVER (PARTITION BY Occupation ORDER BY Name) as rn
+    FROM OCCUPATIONS
+) ranked
+GROUP BY rn
+ORDER BY rn;
+
+TASK - 09 
+
+SELECT N,
+    CASE 
+        WHEN P IS NULL THEN 'Root'
+        WHEN N NOT IN (SELECT DISTINCT P FROM BST WHERE P IS NOT NULL) THEN 'Leaf'
+        ELSE 'Inner'
+    END as node_type
+FROM BST
+ORDER BY N;
+
+TASK - 10
+
+SELECT 
+    c.company_code,
+    c.founder,
+    COUNT(DISTINCT lm.lead_manager_code) as lead_managers,
+    COUNT(DISTINCT sm.senior_manager_code) as senior_managers,
+    COUNT(DISTINCT m.manager_code) as managers,
+    COUNT(DISTINCT e.employee_code) as employees
+FROM Company c
+LEFT JOIN Lead_Manager lm ON c.company_code = lm.company_code
+LEFT JOIN Senior_Manager sm ON c.company_code = sm.company_code
+LEFT JOIN Manager m ON c.company_code = m.company_code
+LEFT JOIN Employee e ON c.company_code = e.company_code
+GROUP BY c.company_code, c.founder
+ORDER BY c.company_code;
+
+TASK - 11
+
+SELECT s.Name
+FROM Students s
+JOIN Friends f ON s.ID = f.ID
+JOIN Packages p1 ON s.ID = p1.ID
+JOIN Packages p2 ON f.Friend_ID = p2.ID
+WHERE p2.Salary > p1.Salary
+ORDER BY p2.Salary;
+
+TASK - 12 
+
+SELECT 
+    job_family,
+    (SUM(CASE WHEN region = 'India' THEN cost ELSE 0 END) * 100.0 / 
+     SUM(CASE WHEN region = 'International' THEN cost ELSE 0 END)) AS cost_ratio_percentage
+FROM job_costs
+GROUP BY job_family;
+
+TASK - 13
+
+SELECT 
+    BU,
+    month_year,
+    (cost * 1.0 / revenue) AS cost_revenue_ratio,
+    LAG(cost * 1.0 / revenue) OVER (PARTITION BY BU ORDER BY month_year) AS prev_month_ratio
+FROM bu_financials
+ORDER BY BU, month_year;
+
+TASK -14
+
+SELECT 
+    sub_band,
+    COUNT(*) AS headcount,
+    (COUNT(*) * 100.0 / (SELECT COUNT(*) FROM employees)) AS percentage
+FROM employees
+GROUP BY sub_band;
+
+TASK - 15
+
+-- Method 1: Using ROWNUM (Oracle)
+SELECT * FROM (
+    SELECT employee_id, name, salary,
+           ROW_NUMBER() OVER (ORDER BY salary DESC) as rn
+    FROM employees
+) WHERE rn <= 5;
+
+-- Method 2: Using LIMIT with subquery
+SELECT employee_id, name, salary
+FROM employees e1
+WHERE (SELECT COUNT(*) FROM employees e2 WHERE e2.salary > e1.salary) < 5;
+
+TASK - 16
+
+-- Assuming we want to swap column1 and column2
+UPDATE table_name 
+SET 
+    column1 = column2,
+    column2 = column1;
+
+-- Alternative method using arithmetic (for numeric columns)
+UPDATE table_name 
+SET 
+    column1 = column1 + column2,
+    column2 = column1 - column2,
+    column1 = column1 - column2;
+
+-- Alternative method using CASE
+UPDATE table_name 
+SET 
+    column1 = CASE WHEN 1=1 THEN column2 ELSE column1 END,
+    column2 = CASE WHEN 1=1 THEN column1 ELSE column2 END;
+
+TASK - 17
+
+-- SQL Server syntax
+-- Step 1: Create Login
+CREATE LOGIN new_user_login 
+WITH PASSWORD = 'SecurePassword123!';
+
+-- Step 2: Create User in specific database
+USE your_database_name;
+CREATE USER new_user FOR LOGIN new_user_login;
+
+-- Step 3: Add user to db_owner role
+ALTER ROLE db_owner ADD MEMBER new_user;
+
+-- Alternative: Grant db_owner permissions
+EXEC sp_addrolemember 'db_owner', 'new_user';
+
+TASK - 18 
+
+SELECT 
+    BU,
+    month_year,
+    SUM(cost * weight) / SUM(weight) AS weighted_average_cost,
+    LAG(SUM(cost * weight) / SUM(weight)) OVER (
+        PARTITION BY BU 
+        ORDER BY month_year
+    ) AS prev_month_weighted_avg
+FROM employee_costs
+GROUP BY BU, month_year
+ORDER BY BU, month_year;
+
+-- If weight is headcount
+SELECT 
+    BU,
+    month_year,
+    SUM(cost * headcount) / SUM(headcount) AS weighted_average_cost
+FROM bu_monthly_data
+GROUP BY BU, month_year
+ORDER BY BU, month_year;
+
+TASK - 19
+
+SELECT CEIL(AVG(Salary) - AVG(CAST(REPLACE(CAST(Salary AS CHAR), '0', '') AS DECIMAL))) 
+FROM EMPLOYEES;
+
+TASK - 20
+
+-- Method 1: Using NOT EXISTS
+INSERT INTO target_table
+SELECT * FROM source_table s
+WHERE NOT EXISTS (
+    SELECT 1 FROM target_table t 
+    WHERE t.primary_key = s.primary_key
+);
+
+-- Method 2: Using LEFT JOIN
+INSERT INTO target_table
+SELECT s.* FROM source_table s
+LEFT JOIN target_table t ON s.primary_key = t.primary_key
+WHERE t.primary_key IS NULL;
+
