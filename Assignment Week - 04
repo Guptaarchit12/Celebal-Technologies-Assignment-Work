@@ -1,0 +1,68 @@
+DELIMITER //
+
+CREATE PROCEDURE AllocateSubjects()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE sid INT;
+    DECLARE cur CURSOR FOR 
+        SELECT StudentId FROM StudentDetails ORDER BY GPA DESC;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    -- Clean previous allotments
+    DELETE FROM Allotments;
+    DELETE FROM UnallottedStudents;
+
+    OPEN cur;
+    
+    read_loop: LOOP
+        FETCH cur INTO sid;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        DECLARE pref INT DEFAULT 1;
+        DECLARE subject_found BOOLEAN DEFAULT FALSE;
+        
+        subject_loop: WHILE pref <= 5 DO
+            DECLARE subid VARCHAR(20);
+            
+            -- Get SubjectId for this student with current preference
+            SELECT SubjectId INTO subid
+            FROM StudentPreference
+            WHERE StudentId = sid AND Preference = pref;
+            
+            -- Check seat availability
+            IF EXISTS (
+                SELECT * FROM SubjectDetails
+                WHERE SubjectId = subid AND RemainingSeats > 0
+            ) THEN
+                -- Allocate the subject
+                INSERT INTO Allotments (SubjectId, StudentId)
+                VALUES (subid, sid);
+                
+                -- Decrease seat count
+                UPDATE SubjectDetails
+                SET RemainingSeats = RemainingSeats - 1
+                WHERE SubjectId = subid;
+                
+                SET subject_found = TRUE;
+                LEAVE subject_loop;
+                END IF;
+            
+                SET pref = pref + 1;
+                END WHILE;
+
+               -- If not allotted any subject
+               IF subject_found = FALSE THEN
+                    INSERT INTO UnallottedStudents (StudentId)
+                    VALUES (sid);
+                END IF;
+
+                END LOOP;
+                
+                CLOSE cur;
+            END //
+            
+            DELIMITER ;
+
+CALL AllocateSubjects();
