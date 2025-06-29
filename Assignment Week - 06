@@ -1,4 +1,4 @@
-Q LeetCode Problem Number #1321
+Q. LeetCode Problem Number #1321
 SELECT
     days.visited_on,
     SUM(daily.amount) AS amount,
