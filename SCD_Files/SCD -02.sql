@@ -5,7 +5,7 @@ BEGIN
     DECLARE v_today DATE;
     SET v_today = CURDATE();
 
-    -- Step 1: Expire the old records
+
     UPDATE dim_customer d
     JOIN stg_customer s ON d.customer_id = s.customer_id
     SET d.valid_to = DATE_SUB(v_today, INTERVAL 1 DAY),
@@ -15,7 +15,6 @@ BEGIN
            OR d.email <> s.email
            OR d.phone <> s.phone);
 
-    -- Step 2: Insert new updated records
     INSERT INTO dim_customer (
         customer_id, customer_name, email, phone, valid_from, valid_to, is_current
     )
