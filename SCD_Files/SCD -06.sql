@@ -30,8 +30,8 @@ VALUES
 
 INSERT INTO stg_customer (customer_id, customer_name, email, phone)
 VALUES
-(1, 'Alice', 'alice_new@example.com', '1234567890'),  -- email changed
-(2, 'Bob', 'bob@example.com', '9876543210');          -- no change
+(1, 'Alice', 'alice_new@example.com', '1234567890'), 
+(2, 'Bob', 'bob@example.com', '9876543210');          
 
 
 DROP PROCEDURE IF EXISTS apply_scd_type_6;
