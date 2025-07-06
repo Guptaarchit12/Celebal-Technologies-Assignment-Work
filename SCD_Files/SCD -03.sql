@@ -22,12 +22,12 @@ VALUES
 (2, 'Bob', 'bob@example.com', NULL),
 (3, 'Charlie', 'charlie@example.com', NULL);
 
--- Step 4: Insert updated data into stg_customer
+
 INSERT INTO stg_customer (customer_id, name, email)
 VALUES 
-(1, 'Alice', 'alice_new@example.com'),  -- Email changed
-(2, 'Bob', 'bob@example.com'),          -- No change
-(3, 'Charlie', 'charlie_new@example.com'); -- Email changed
+(1, 'Alice', 'alice_new@example.com'), 
+(2, 'Bob', 'bob@example.com'),         
+(3, 'Charlie', 'charlie_new@example.com'); 
 
 
 ALTER TABLE dim_customer ADD INDEX (customer_id);
