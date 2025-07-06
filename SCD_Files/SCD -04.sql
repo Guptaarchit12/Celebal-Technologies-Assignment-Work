@@ -36,9 +36,9 @@ VALUES
 
 INSERT INTO stg_customer (customer_id, customer_name, email, phone)
 VALUES 
-(1, 'Alice', 'alice_new@example.com', '1234567890'), -- email changed
-(2, 'Bob', 'bob@example.com', '9876543210'),         -- no change
-(3, 'Charlie X', 'charlie@example.com', '0001112222'); -- name and phone changed
+(1, 'Alice', 'alice_new@example.com', '1234567890'),
+(2, 'Bob', 'bob@example.com', '9876543210'),         
+(3, 'Charlie X', 'charlie@example.com', '0001112222'); 
 
 
 DROP PROCEDURE IF EXISTS apply_scd_type_4;
@@ -47,7 +47,7 @@ DROP PROCEDURE IF EXISTS apply_scd_type_4;
 DELIMITER //
 CREATE PROCEDURE apply_scd_type_4()
 BEGIN
-    -- Step A: Insert old records to history before update
+    
     INSERT INTO hist_customer (customer_id, customer_name, email, phone, changed_date)
     SELECT d.customer_id, d.customer_name, d.email, d.phone, CURDATE()
     FROM dim_customer d
